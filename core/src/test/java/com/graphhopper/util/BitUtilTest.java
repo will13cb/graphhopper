@@ -17,10 +17,11 @@
  */
 package com.graphhopper.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Peter Karich
@@ -162,5 +163,78 @@ public class BitUtilTest {
         bytes = new byte[3];
         bitUtil.fromUInt3(bytes, -12345678, 0);
         assertEquals(-12345678 & 0x00FF_FFFF, bitUtil.toUInt3(bytes, 0));
+    }
+
+
+    // NOUVEAUX TESTS
+
+    @Test
+    public void testCountBitValueInvalidInput() {
+        /**
+         * NOUVEAU TEST TÂCHE 2 - Test 4/7
+         * Intention: Tester la validation d'entrée dans countBitValue
+         * Données: Valeur négative (maxTurnCosts < 0)
+         * Oracle: Doit lever IllegalArgumentException
+         * Justification: Couvre la branche de validation non testée
+         */
+        assertThrows(IllegalArgumentException.class, () -> 
+            BitUtil.countBitValue(-1));
+        assertThrows(IllegalArgumentException.class, () -> 
+            BitUtil.countBitValue(-100));
+        
+        // Test cas limite valide
+        assertEquals(0, BitUtil.countBitValue(0));
+        assertEquals(1, BitUtil.countBitValue(1));
+        assertEquals(4, BitUtil.countBitValue(15)); // 1111 en binaire
+    }
+
+    @Test
+    public void testRoundTripConversionsWithLimits() {
+        /**
+         * NOUVEAU TEST TÂCHE 2 - Test 5/7
+         * Intention: Tester les conversions aller-retour avec valeurs limites
+         * Données: MIN_VALUE et MAX_VALUE pour tous les types primitifs
+         * Oracle: La conversion aller-retour doit préserver la valeur originale
+         * Justification: Couvre les cas limites non testés dans les conversions
+         */
+        // Test avec Integer
+        assertEquals(Integer.MIN_VALUE, 
+            bitUtil.toInt(bitUtil.fromInt(Integer.MIN_VALUE)));
+        assertEquals(Integer.MAX_VALUE, 
+            bitUtil.toInt(bitUtil.fromInt(Integer.MAX_VALUE)));
+        
+        // Test avec Long
+        assertEquals(Long.MIN_VALUE, 
+            bitUtil.toLong(bitUtil.fromLong(Long.MIN_VALUE)));
+        assertEquals(Long.MAX_VALUE, 
+            bitUtil.toLong(bitUtil.fromLong(Long.MAX_VALUE)));
+        
+        // Test avec Float (cas spéciaux)
+        assertEquals(Float.MIN_VALUE, 
+            bitUtil.toFloat(bitUtil.fromFloat(Float.MIN_VALUE)), 0.0f);
+        assertEquals(Float.MAX_VALUE, 
+            bitUtil.toFloat(bitUtil.fromFloat(Float.MAX_VALUE)), 0.0f);
+        assertTrue(Float.isNaN(bitUtil.toFloat(bitUtil.fromFloat(Float.NaN))));
+        assertEquals(Float.POSITIVE_INFINITY, 
+            bitUtil.toFloat(bitUtil.fromFloat(Float.POSITIVE_INFINITY)));
+        assertEquals(Float.NEGATIVE_INFINITY, 
+            bitUtil.toFloat(bitUtil.fromFloat(Float.NEGATIVE_INFINITY)));
+        
+        // Test avec Double (cas spéciaux)
+        assertEquals(Double.MIN_VALUE, 
+            bitUtil.toDouble(bitUtil.fromDouble(Double.MIN_VALUE)), 0.0);
+        assertEquals(Double.MAX_VALUE, 
+            bitUtil.toDouble(bitUtil.fromDouble(Double.MAX_VALUE)), 0.0);
+        assertTrue(Double.isNaN(bitUtil.toDouble(bitUtil.fromDouble(Double.NaN))));
+        assertEquals(Double.POSITIVE_INFINITY, 
+            bitUtil.toDouble(bitUtil.fromDouble(Double.POSITIVE_INFINITY)));
+        assertEquals(Double.NEGATIVE_INFINITY, 
+            bitUtil.toDouble(bitUtil.fromDouble(Double.NEGATIVE_INFINITY)));
+        
+        // Test avec Short
+        assertEquals(Short.MIN_VALUE, 
+            bitUtil.toShort(bitUtil.fromShort(Short.MIN_VALUE)));
+        assertEquals(Short.MAX_VALUE, 
+            bitUtil.toShort(bitUtil.fromShort(Short.MAX_VALUE)));
     }
 }

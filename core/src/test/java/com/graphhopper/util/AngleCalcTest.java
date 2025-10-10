@@ -17,9 +17,11 @@
  */
 package com.graphhopper.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Johannes Pelzer
@@ -147,6 +149,104 @@ public class AngleCalcTest {
         Coordinate(double x, double y) {
             this.x = x;
             this.y = y;
+        }
+    }
+
+
+    // NOUVEAUX TESTS AJOUTÉS
+    
+    @Test
+    public void testConvertAzimuthBoundaryValidation() {
+        /**
+         * NOUVEAU TEST TÂCHE 2 - Test 1/7
+         * Intention: Tester la validation des limites dans convertAzimuth2xaxisAngle
+         * Données: Valeurs invalides (< 0 et > 360)
+         * Oracle: Doit lever IllegalArgumentException
+         * Justification: Couvre les branches de validation non testées
+         */
+        assertThrows(IllegalArgumentException.class, () -> 
+            AC.convertAzimuth2xaxisAngle(-1.0));
+        assertThrows(IllegalArgumentException.class, () -> 
+            AC.convertAzimuth2xaxisAngle(361.0));
+        assertThrows(IllegalArgumentException.class, () -> 
+            AC.convertAzimuth2xaxisAngle(-0.1));
+        assertThrows(IllegalArgumentException.class, () -> 
+            AC.convertAzimuth2xaxisAngle(360.1));
+    }
+
+    @Test
+    public void testAlignOrientationNegativeBase() {
+        /**
+         * NOUVEAU TEST TÂCHE 2 - Test 2/7
+         * Intention: Tester alignOrientation avec baseOrientation négatif
+         * Données: baseOrientation < 0 avec différentes orientations
+         * Oracle: Vérifier les ajustements de 2π selon les conditions
+         * Justification: Couvre les branches conditionnelles non testées
+         */
+        // Test avec baseOrientation négatif et orientation > +Math.PI + baseOrientation
+        double baseOrientation = -Math.PI / 2; // -π/2
+        double orientation = Math.PI; // π
+        // Condition: orientation > +Math.PI + baseOrientation
+        // π > π + (-π/2) = π > π/2 = true, donc soustrait 2π
+        double result = AC.alignOrientation(baseOrientation, orientation);
+        double expected = orientation - 2 * Math.PI; // π - 2π = -π
+        assertEquals(expected, result, 1e-6);
+        
+        // Test avec baseOrientation négatif et orientation normale (pas de modification)
+        baseOrientation = -Math.PI / 2;
+        orientation = -Math.PI / 4; // -π/4
+        // Condition: orientation > +Math.PI + baseOrientation
+        // -π/4 > π + (-π/2) = -π/4 > π/2 = false, donc pas de modification
+        result = AC.alignOrientation(baseOrientation, orientation);
+        assertEquals(orientation, result, 1e-6); // Pas de modification
+        
+        // Test cas limite avec baseOrientation = -π
+        baseOrientation = -Math.PI;
+        orientation = Math.PI / 2; // π/2
+        // Condition: orientation > +Math.PI + baseOrientation
+        // π/2 > π + (-π) = π/2 > 0 = true, donc soustrait 2π
+        result = AC.alignOrientation(baseOrientation, orientation);
+        expected = orientation - 2 * Math.PI; // π/2 - 2π = -3π/2
+        assertEquals(expected, result, 1e-6);
+    }
+
+    @Test
+    public void testGeographicCoordinatesWithFaker() {
+        /**
+         * NOUVEAU TEST TÂCHE 2 - Test 3/7 - UTILISE JAVA-FAKER
+         * Intention: Tester calcOrientation avec coordonnées géographiques réalistes
+         * Données: Coordonnées générées aléatoirement dans les limites géographiques
+         * Oracle: Vérifier cohérence entre méthodes exacte et rapide
+         * Justification: Utilise faker pour générer des cas de test réalistes et tester
+         *                la précision relative entre les deux algorithmes
+         */
+        com.github.javafaker.Faker faker = new com.github.javafaker.Faker();
+        
+        for (int i = 0; i < 50; i++) {
+            // Générer des coordonnées géographiques valides
+            double lat1 = faker.number().randomDouble(6, -90, 90);
+            double lon1 = faker.number().randomDouble(6, -180, 180);
+            double lat2 = faker.number().randomDouble(6, -90, 90);
+            double lon2 = faker.number().randomDouble(6, -180, 180);
+            
+            // Éviter les cas où les points sont identiques
+            if (Math.abs(lat1 - lat2) < 1e-10 && Math.abs(lon1 - lon2) < 1e-10) {
+                continue;
+            }
+            
+            double exactOrientation = AC.calcOrientation(lat1, lon1, lat2, lon2, true);
+            double fastOrientation = AC.calcOrientation(lat1, lon1, lat2, lon2, false);
+            
+            // Vérifier que les deux méthodes donnent des résultats cohérents
+            assertTrue(Math.abs(exactOrientation) <= Math.PI, "Orientation exacte hors limites");
+            assertTrue(Math.abs(fastOrientation) <= Math.PI, "Orientation rapide hors limites");
+            
+            // La différence doit rester dans une marge acceptable (algorithme rapide moins précis)
+            double diff = Math.abs(exactOrientation - fastOrientation);
+            assertTrue(diff < 0.1, String.format(
+                "Différence trop importante entre méthodes exacte et rapide: %.6f " +
+                "pour coordonnées (%.6f,%.6f) -> (%.6f,%.6f)", 
+                diff, lat1, lon1, lat2, lon2));
         }
     }
 }

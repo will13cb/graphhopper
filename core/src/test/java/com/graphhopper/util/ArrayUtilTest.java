@@ -18,14 +18,18 @@
 
 package com.graphhopper.util;
 
-import com.carrotsearch.hppc.IntArrayList;
-import org.junit.jupiter.api.Test;
-
 import java.util.Arrays;
 import java.util.Random;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+
+import com.carrotsearch.hppc.IntArrayList;
 import static com.carrotsearch.hppc.IntArrayList.from;
-import static org.junit.jupiter.api.Assertions.*;
 
 class ArrayUtilTest {
 
@@ -177,5 +181,98 @@ class ArrayUtilTest {
         int[] a = {2, 6, 8, 12, 15};
         int[] b = {3, 7, 9, 10, 11, 12, 15, 20, 21, 26};
         assertEquals(from(2, 3, 6, 7, 8, 9, 10, 11, 12, 15, 20, 21, 26), from(ArrayUtil.merge(a, b)));
+    }
+
+
+    // NOUVEAUX TESTS
+    
+    @Test
+    public void testRemoveConsecutiveDuplicatesInvalidEnd() {
+        /**
+         * NOUVEAU TEST TÂCHE 2 - Test 6/7
+         * Intention: Tester la validation du paramètre end dans removeConsecutiveDuplicates
+         * Données: Valeur end négative
+         * Oracle: Doit lever IllegalArgumentException
+         * Justification: Couvre la branche de validation non testée
+         */
+        int[] arr = {1, 2, 3, 4, 5};
+        
+        // Test avec end négatif
+        assertThrows(IllegalArgumentException.class, () -> 
+            ArrayUtil.removeConsecutiveDuplicates(arr, -1));
+        assertThrows(IllegalArgumentException.class, () -> 
+            ArrayUtil.removeConsecutiveDuplicates(arr, -10));
+        
+        // Test cas limite valide end = 0
+        assertEquals(0, ArrayUtil.removeConsecutiveDuplicates(arr, 0));
+        
+        // Test cas normal pour vérifier que la méthode fonctionne toujours
+        int[] arrWithDuplicates = {1, 1, 2, 2, 2, 3, 4, 4};
+        int newSize = ArrayUtil.removeConsecutiveDuplicates(arrWithDuplicates, 8);
+        assertEquals(4, newSize); // Retourne la nouvelle taille
+        // Vérifier que les éléments uniques sont bien placés au début
+        assertEquals(1, arrWithDuplicates[0]);
+        assertEquals(2, arrWithDuplicates[1]);
+        assertEquals(3, arrWithDuplicates[2]);
+        assertEquals(4, arrWithDuplicates[3]);
+        // Les éléments après newSize ne sont pas définis
+    }
+
+    @Test
+    public void testShuffleAndMergeEdgeCases() {
+        /**
+         * NOUVEAU TEST TÂCHE 2 - Test 7/7
+         * Intention: Tester shuffle et merge avec cas limites
+         * Données: Listes vides, taille 1, tableaux vides pour merge
+         * Oracle: Vérifier comportement correct sans exception
+         * Justification: Couvre les cas limites non testés dans shuffle et merge
+         */
+        Random rnd = new Random(42); // Seed fixe pour reproductibilité
+        
+        // Test shuffle avec liste de taille 1
+        IntArrayList single = ArrayUtil.constant(1, 5);
+        ArrayUtil.shuffle(single, rnd);
+        assertEquals(1, single.size());
+        assertEquals(5, single.get(0)); // Valeur inchangée
+        
+        // Test shuffle avec liste vide
+        IntArrayList empty = new IntArrayList();
+        ArrayUtil.shuffle(empty, rnd); // Ne doit pas planter
+        assertEquals(0, empty.size());
+        
+        // Test shuffle avec liste de taille 2 (cas minimal pour shuffle)
+        IntArrayList pair = from(10, 20);
+        ArrayUtil.shuffle(pair, rnd);
+        assertEquals(2, pair.size());
+        assertTrue((pair.get(0) == 10 && pair.get(1) == 20) || 
+                  (pair.get(0) == 20 && pair.get(1) == 10));
+        
+        // Test merge avec tableaux vides (déjà testé mais on ajoute plus de cas)
+        int[] emptyArray = {};
+        int[] nonEmpty = {1, 3, 5, 7};
+        
+        // Merge: vide + non-vide
+        int[] result1 = ArrayUtil.merge(emptyArray, nonEmpty);
+        assertArrayEquals(nonEmpty, result1);
+        
+        // Merge: non-vide + vide
+        int[] result2 = ArrayUtil.merge(nonEmpty, emptyArray);
+        assertArrayEquals(nonEmpty, result2);
+        
+        // Merge: vide + vide
+        int[] result3 = ArrayUtil.merge(emptyArray, emptyArray);
+        assertEquals(0, result3.length);
+        
+        // Test merge avec tableaux d'un seul élément
+        int[] single1 = {5};
+        int[] single2 = {3};
+        int[] result4 = ArrayUtil.merge(single1, single2);
+        assertArrayEquals(new int[]{3, 5}, result4);
+        
+        // Test merge avec éléments identiques (suppression des doublons)
+        int[] dup1 = {1, 3, 5};
+        int[] dup2 = {3, 5, 7};
+        int[] result5 = ArrayUtil.merge(dup1, dup2);
+        assertArrayEquals(new int[]{1, 3, 5, 7}, result5);
     }
 }
