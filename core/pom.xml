@@ -164,6 +164,41 @@
                     <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.20.6</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>1.2.1</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <targetClasses>
+                        <param>com.graphhopper.util.BreadthFirstSearch</param>
+                        <param>com.graphhopper.util.SimpleIntDeque</param>
+                        <param>com.graphhopper.util.AngleCalc</param>
+                        <param>com.graphhopper.util.ArrayUtil</param>
+                        <param>com.graphhopper.util.BitUtil</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>com.graphhopper.util.BreadthFirstSearchTest</param>
+                        <param>com.graphhopper.util.SimpleIntDequeTest</param>
+                        <param>com.graphhopper.util.AngleCalcTest</param>
+                        <param>com.graphhopper.util.ArrayUtilTest</param>
+                        <param>com.graphhopper.util.BitUtilTest</param>
+                    </targetTests>
+                    <mutators>
+                        <mutator>STRONGER</mutator>
+                    </mutators>
+                    <outputFormats>
+                        <param>HTML</param>
+                    </outputFormats>
+                    <timestampedReports>false</timestampedReports>
+                </configuration>
+            </plugin>
         </plugins>
 
         <!-- make version available at runtime via version file -->

@@ -36,4 +36,42 @@ jobs:
             ${{ runner.os}}-node_modules-
       - name: Build ${{ matrix.java-version }}
         run: mvn -B clean test
+      # Étape PIT : test de mutation
+      - name: Run PIT Mutation Tests
+        run: |
+          mvn -B -f core/pom.xml org.pitest:pitest-maven:mutationCoverage \
+            -DreportsDirectory=target/pit-reports \
+            -DmutationThreshold=70 \
+            -DcoverageThreshold=80 \
+            -DtimestampedReports=false
+
+      # Sauvegarder les rapports PIT comme artefact GitHub
+      - name: Upload PIT Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-reports
+          path: core/target/pit-reports
+
+      # Vérifier si le build doit échouer selon les métriques
+      - name: Fail build if mutation score below threshold
+        run: |
+          REPORT=$(grep -oP '(?<=<mutationCoverage>).*(?=</mutationCoverage>)' core/target/pit-reports/mutations.xml | head -1)
+          SCORE=$(echo "$REPORT" | sed 's/%//')
+          THRESHOLD=70
+          echo "Mutation score: $SCORE%"
+          if (( $(echo "$SCORE < $THRESHOLD" | bc -l) )); then
+            echo "❌ Mutation score below threshold ($THRESHOLD%)"
+            exit 1
+          else
+            echo "✅ Mutation score OK"
+          fi
+
+      - name: Compare with previous PIT report
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p core/prev-pit-reports
+          # Exemple : récupérer le rapport précédent depuis un artefact ou le cache
+          # gh run download --name pit-reports --dir core/prev-pit-reports || echo "Aucun artefact précédent"
+          bash core/compare_pit.sh
 
