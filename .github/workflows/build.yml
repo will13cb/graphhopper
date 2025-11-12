@@ -43,8 +43,7 @@ jobs:
             -DreportsDirectory=target/pit-reports \
             -DmutationThreshold=70 \
             -DcoverageThreshold=80 \
-            -DtimestampedReports=false \
-            -DjvmArgs="-Xmx1G -Xms512m"
+            -DtimestampedReports=false
 
       # Sauvegarder les rapports PIT comme artefact GitHub
       - name: Upload PIT Reports
