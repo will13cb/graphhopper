@@ -35,7 +35,7 @@ jobs:
           restore-keys: |
             ${{ runner.os}}-node_modules-
       - name: Build ${{ matrix.java-version }}
-        run: mvn -B clean test
+        run:  mvn -B clean install -DskipTests
       # Étape PIT : test de mutation
       - name: Run PIT Mutation Tests
         run: |
