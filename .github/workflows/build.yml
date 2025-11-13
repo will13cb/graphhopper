@@ -40,6 +40,7 @@ jobs:
       - name: Run PIT Mutation Tests
         run: |
           mvn -B -f core/pom.xml org.pitest:pitest-maven:mutationCoverage \
+            -DargLine="" \
             -DreportsDirectory=target/pit-reports \
             -DmutationThreshold=70 \
             -DcoverageThreshold=80 \
