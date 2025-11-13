@@ -25,6 +25,9 @@
         -->
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
         <builddate>${maven.build.timestamp}</builddate>
+
+        <!-- ✅ Added to prevent PITEST argLine errors -->
+        <argLine></argLine>
     </properties>
     <licenses>
         <license>
