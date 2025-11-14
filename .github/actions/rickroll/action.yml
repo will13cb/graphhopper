@@ -1,0 +1,34 @@
+name: "Rickroll on Failure"
+description: "Poste un Rickroll sur la PR (ou dans le Job Summary)"
+inputs:
+  pr-number:
+    description: "Numéro de PR (optionnel). Si absent, écrit dans le Job Summary."
+    required: false
+  message:
+    description: "Message personnalisé"
+    required: false
+    default: "Some checks failed... time for a Rickroll! 🎵"
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      env:
+        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        MSG: ${{ inputs.message }}
+      run: |
+        set -euo pipefail
+        RICKURL="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+
+        if [[ -n "${PR_NUMBER:-}" ]]; then
+          body="${MSG}\n\n${RICKURL}"
+          # POST comment on PR via Issues API
+          curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+               -H "Accept: application/vnd.github+json" \
+               -X POST "https://api.github.com/repos/${REPO}/issues/${PR_NUMBER}/comments" \
+               -d "$(printf '{"body": "%s"}' "$(printf '%s' "$body" | sed 's/"/\\"/g')")" \
+            || echo -e "${MSG}\n\n${RICKURL}" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo -e "${MSG}\n\n${RICKURL}" >> "$GITHUB_STEP_SUMMARY"
+        fi
