@@ -41,13 +41,13 @@ public class BreadthFirstSearchTest {
     public void setup() {
         counter = 0;
     }
-
+/*
     // Pour vérifier que rickroll commence quand fail
     @Test
     void forceFailure() {
         assertEquals(1, 2);
     }
-
+*/
     @Test
     public void testBFS() {
         BreadthFirstSearch bfs = new BreadthFirstSearch() {
