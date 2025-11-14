@@ -31,7 +31,7 @@ if [ -z "$CURRENT_SCORE" ] || [ -z "$PREVIOUS_SCORE" ]; then
 fi
 
 echo "PIT comparison:"
-echo "  Baseline (main): ${PREVIOUS_SCORE}%"
+echo "  Baseline (master): ${PREVIOUS_SCORE}%"
 echo "  Current build:   ${CURRENT_SCORE}%"
 
 # Comparaison numérique

@@ -49,15 +49,15 @@ jobs:
       - name: Build ${{ matrix.java-version }}
         run: mvn -B clean install -DskipTests
 
-      # Restore last baseline from main (on PRs/branches)
-      - name: Restore PIT baseline cache (non-main)
-        if: github.ref != 'refs/heads/main'
+      # Restore last baseline from master (on PRs/branches)
+      - name: Restore PIT baseline cache (non-master)
+        if: github.ref != 'refs/heads/master'
         uses: actions/cache@v4
         with:
           path: core/prev-pit-reports
-          key: pit-baseline-main-${{ github.run_id }}-restore-sentinel
+          key: pit-baseline-master-${{ github.run_id }}-restore-sentinel
           restore-keys: |
-            pit-baseline-main-
+            pit-baseline-master-
 
       # Run PIT on core and generate XML + HTML under core/target/pit-reports
       - name: Run PIT Mutation Tests
@@ -80,26 +80,26 @@ jobs:
 
       # Compare current vs previous (fail if regression) — only on PRs/branches
       - name: Compare current vs baseline (fail on regression)
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/master'
         run: |
           # Expect baseline at core/prev-pit-reports/mutations.xml
           # Script reads current at core/target/pit-reports/mutations.xml
           (cd core && ./compare_pit.sh)
 
-      # On main: save fresh baseline into cache for future comparisons
-      - name: Prepare baseline (main only)
-        if: github.ref == 'refs/heads/main'
+      # On master: save fresh baseline into cache for future comparisons
+      - name: Prepare baseline (master only)
+        if: github.ref == 'refs/heads/master'
         run: |
           rm -rf core/prev-pit-reports
           mkdir -p core/prev-pit-reports
           cp -f core/target/pit-reports/mutations.xml core/prev-pit-reports/mutations.xml
 
-      - name: Save PIT baseline cache (main only)
-        if: github.ref == 'refs/heads/main'
+      - name: Save PIT baseline cache (master only)
+        if: github.ref == 'refs/heads/master'
         uses: actions/cache@v4
         with:
           path: core/prev-pit-reports
-          key: pit-baseline-main-${{ github.run_id }}
+          key: pit-baseline-master-${{ github.run_id }}
 
   rickroll-on-failure:
     name: Rickroll (on failure)
