@@ -17,15 +17,17 @@
  */
 package com.graphhopper.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import com.carrotsearch.hppc.IntArrayList;
 import com.graphhopper.coll.GHBitSet;
 import com.graphhopper.coll.GHIntHashSet;
 import com.graphhopper.coll.GHTBitSet;
 import com.graphhopper.storage.BaseGraph;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Peter Karich
@@ -38,6 +40,12 @@ public class BreadthFirstSearchTest {
     @BeforeEach
     public void setup() {
         counter = 0;
+    }
+
+    // Pour vérifier que rickroll commence quand fail
+    @Test
+    void forceFailure() {
+        assertEquals(1, 2);
     }
 
     @Test
