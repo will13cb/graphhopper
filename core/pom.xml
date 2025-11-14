@@ -203,6 +203,7 @@
                     </mutators>
                     <outputFormats>
                         <param>HTML</param>
+                        <param>XML</param>
                     </outputFormats>
                     <timestampedReports>false</timestampedReports>
                 </configuration>
