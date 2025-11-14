@@ -66,8 +66,12 @@ jobs:
           key: pit-baseline-main-${{ github.run_id }}-restore-sentinel   # n'existera jamais -> force RESTORE
           restore-keys: |
             pit-baseline-main-
-
-      # (B) Exécuter PIT (génère core/target/pit-reports/mutations.xml)
+            
+      # (B) Build le projet pour ne pas avoir de problème de dépendance
+      - name: Build full project before PIT
+        run: mvn -B clean install -DskipTests
+        
+      # (C) Exécuter PIT (génère core/target/pit-reports/mutations.xml)
       - name: Run PIT Mutation Tests
         run: |
           mvn -B -f core/pom.xml org.pitest:pitest-maven:mutationCoverage \
@@ -79,7 +83,7 @@ jobs:
           SCORE=$(grep -oP '(?<=<mutationCoverage>).*?(?=</mutationCoverage>)' core/target/pit-reports/mutations.xml | head -1)
           echo "Current PIT: ${SCORE}%"
 
-      # (C) Sauvegarder baseline quand on est sur main (on fabrique un nouveau cache à clé unique)
+      # (D) Sauvegarder baseline quand on est sur main (on fabrique un nouveau cache à clé unique)
       - name: Prepare baseline folder (main only)
         if: github.ref == 'refs/heads/main'
         run: |
@@ -95,7 +99,7 @@ jobs:
           key: pit-baseline-main-${{ github.run_id }}
           # pas de restore-keys ici -> on force la création d'un "nouveau" cache baseline
 
-      # (D) Comparer courant vs baseline (échoue si score baisse)
+      # (E) Comparer courant vs baseline (échoue si score baisse)
       - name: Compare current vs baseline (fail on regression)
         if: github.ref != 'refs/heads/main'
         run: |
