@@ -36,14 +36,3 @@ jobs:
             ${{ runner.os}}-node_modules-
       - name: Build ${{ matrix.java-version }}
         run: mvn -B clean test
-  rickroll-on-failure:
-    name: Rickroll (on failure)
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: failure()
-    steps:
-      - name: Never gonna give you up
-        run: |
-          echo "Some checks failed..."
-          echo "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
