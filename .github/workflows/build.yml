@@ -3,7 +3,14 @@ permissions:
   pull-requests: write
 
 name: Build and Test
-on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   build:
@@ -11,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java-version: [17]
+        java-version: [24]
 
     steps:
       - uses: actions/checkout@v4
@@ -45,28 +52,27 @@ jobs:
           restore-keys: |
             ${{ runner.os}}-node_modules-
 
-      # Build all modules so core has its deps available for PIT
+      # Build complet pour que core ait ses dépendances pour PIT
       - name: Build ${{ matrix.java-version }}
         run: mvn -B clean install -DskipTests
 
-      # Restore last baseline from master (on PRs/branches)
-      - name: Restore PIT baseline cache (non-master)
-        if: github.ref != 'refs/heads/master'
+      # 🔁 Restaure la baseline PIT (quel que soit la branche / le type d’évènement)
+      - name: Restore PIT baseline cache
         uses: actions/cache@v4
         with:
           path: core/prev-pit-reports
+          # clé unique par run, avec prefix commun pour retrouver la dernière baseline de master
           key: pit-baseline-master-${{ github.run_id }}-restore-sentinel
           restore-keys: |
             pit-baseline-master-
 
-      # Run PIT on core and generate XML + HTML under core/target/pit-reports
+      # Lance PIT sur core (index.html + mutations.xml sous core/target/pit-reports)
       - name: Run PIT Mutation Tests
         run: |
           mvn -B -f core/pom.xml org.pitest:pitest-maven:mutationCoverage \
             -DreportsDirectory=target/pit-reports \
             -DtimestampedReports=false
 
-      # Upload PIT reports for inspection
       - name: Upload PIT Reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -74,25 +80,22 @@ jobs:
           name: pitest-report-${{ github.run_id }}-${{ matrix.java-version }}
           path: core/target/pit-reports
 
-      # Make sure the compare script is executable
       - name: Make compare_pit.sh executable
         run: chmod +x core/compare_pit.sh
 
-      # Compare current vs previous (fail if regression) — only on PRs/branches
+      # ✅ COMPARAISON POUR TOUT COMMIT (toutes branches, push ou PR)
       - name: Compare current vs baseline (fail on regression)
-        if: github.ref != 'refs/heads/master'
         run: |
-          # Expect baseline at core/prev-pit-reports/mutations.xml
-          # Script reads current at core/target/pit-reports/mutations.xml
           (cd core && ./compare_pit.sh)
 
-      # On master: save fresh baseline into cache for future comparisons
+      # Sur master seulement : on met à jour la baseline pour les futurs commits
       - name: Prepare baseline (master only)
         if: github.ref == 'refs/heads/master'
         run: |
           rm -rf core/prev-pit-reports
           mkdir -p core/prev-pit-reports
-          cp -f core/target/pit-reports/mutations.xml core/prev-pit-reports/mutations.xml
+          cp -f core/target/pit-reports/index.html core/prev-pit-reports/index.html
+          cp -f core/target/pit-reports/mutations.xml core/prev-pit-reports/mutations.xml || true
 
       - name: Save PIT baseline cache (master only)
         if: github.ref == 'refs/heads/master'
