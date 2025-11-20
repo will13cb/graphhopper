@@ -49,17 +49,13 @@ jobs:
       - name: Build ${{ matrix.java-version }}
         run: mvn -B clean install -DskipTests
 
-      # Restore last baseline from master (on PRs/branches)
+      # 🔁 Restaure la dernière baseline de master (utilisée par toutes les branches, y compris master pour la comparaison)
       - name: Restore PIT baseline cache
-        # On n'a pas besoin de "if: github.ref != 'refs/heads/master'" car le script compare_pit.sh gère l'absence de baseline.
-        # MAIS, pour la clarté et l'optimisation, votre condition est bonne.
-        if: github.ref != 'refs/heads/master'
         uses: actions/cache@v4
         with:
           path: core/prev-pit-reports
-          # Nous n'avons pas besoin d'une clé exacte ici, nous cherchons la dernière disponible.
-          # Nous retirons donc la clé pour nous concentrer sur la restauration de l'enregistrement de master.
-          key: pit-baseline-master-sentinel-restore # Une clé de fallback sans run_id, moins critique
+          # Clé d'enregistrement unique (utilisée ici comme clé de restauration de dernier recours)
+          key: pit-baseline-master-${{ github.run_id }}-restore-sentinel
           restore-keys: |
             pit-baseline-master-
 
@@ -82,20 +78,22 @@ jobs:
       - name: Make compare_pit.sh executable
         run: chmod +x core/compare_pit.sh
 
-      # Compare current vs previous (fail if regression) — only on PRs/branches
+      # ✅ COMPARAISON POUR TOUT COMMIT (y compris master) - FAIT ÉCHOUER SI RÉGRESSION
       - name: Compare current vs baseline (fail on regression)
-        if: github.ref != 'refs/heads/master'
+        # RETRAIT DE LA CONDITION : CETTE ÉTAPE S'EXÉCUTE MAINTENANT TOUJOURS
         run: |
-          # Expect baseline at core/prev-pit-reports/mutations.xml
-          # Script reads current at core/target/pit-reports/mutations.xml
           (cd core && ./compare_pit.sh)
 
-      # On master: save fresh baseline into cache for future comparisons
+      # 📝 Sur master seulement : save fresh baseline into cache for future comparisons
       - name: Prepare baseline (master only)
         if: github.ref == 'refs/heads/master'
         run: |
+          # Si la comparaison a échoué juste avant (score bas), cette étape ne s'exécute PAS.
+          # C'est la protection : si ça baisse, on n'enregistre pas la mauvaise baseline.
           rm -rf core/prev-pit-reports
           mkdir -p core/prev-pit-reports
+          # NOTE : J'ai remis le index.html, car votre script l'utilise.
+          cp -f core/target/pit-reports/index.html core/prev-pit-reports/index.html
           cp -f core/target/pit-reports/mutations.xml core/prev-pit-reports/mutations.xml
 
       - name: Save PIT baseline cache (master only)

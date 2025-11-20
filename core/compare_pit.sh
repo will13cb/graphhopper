@@ -16,6 +16,7 @@ if [ ! -f "$PREVIOUS_HTML" ]; then
 fi
 
 extract_score() {
+    # Extrait le premier score de mutation (%xx.xx%) et retire le '%'
     grep -oE '[0-9]+(\.[0-9]+)?%' "$1" | head -1 | tr -d '%'
 }
 
@@ -26,6 +27,7 @@ echo "PIT comparison:"
 echo "  Baseline (master): $PREVIOUS_SCORE%"
 echo "  Current build:     $CURRENT_SCORE%"
 
+# Utilise awk pour une comparaison numérique de nombres flottants (avec décimales)
 if awk "BEGIN {exit !($CURRENT_SCORE < $PREVIOUS_SCORE)}"; then
   echo "Failure: mutation score regressed."
   exit 1
