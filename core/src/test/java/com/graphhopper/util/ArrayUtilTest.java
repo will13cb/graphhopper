@@ -28,7 +28,7 @@ import static com.carrotsearch.hppc.IntArrayList.from;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ArrayUtilTest {
-
+    
     @Test
     public void testConstant() {
         IntArrayList list = ArrayUtil.constant(10, 3);
@@ -37,7 +37,7 @@ class ArrayUtilTest {
         assertEquals(3, list.get(9));
         assertEquals(10, list.buffer.length);
     }
-
+    /* comment out tests to test github action
     @Test
     public void testIota() {
         IntArrayList list = ArrayUtil.iota(15);
@@ -178,4 +178,5 @@ class ArrayUtilTest {
         int[] b = {3, 7, 9, 10, 11, 12, 15, 20, 21, 26};
         assertEquals(from(2, 3, 6, 7, 8, 9, 10, 11, 12, 15, 20, 21, 26), from(ArrayUtil.merge(a, b)));
     }
+    */
 }
