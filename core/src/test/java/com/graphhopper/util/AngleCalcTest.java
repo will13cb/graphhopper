@@ -41,7 +41,7 @@ public class AngleCalcTest {
         assertEquals(90 - 32.76, Math.toDegrees(AC.calcOrientation(49.942, 11.580, 49.944, 11.582)), 0.01);
         assertEquals(-90 - 32.76, Math.toDegrees(AC.calcOrientation(49.944, 11.582, 49.942, 11.580)), 0.01);
     }
-    // Comment out tests to make the github action reject the push because it decreases the pit score
+
     @Test
     public void testOrientationFast() {
         assertEquals(90.0, Math.toDegrees(AC.calcOrientation(0, 0, 1, 0, false)), 0.01);
@@ -150,5 +150,4 @@ public class AngleCalcTest {
             this.y = y;
         }
     }
-    
 }
