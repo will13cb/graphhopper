@@ -50,12 +50,16 @@ jobs:
         run: mvn -B clean install -DskipTests
 
       # Restore last baseline from master (on PRs/branches)
-      - name: Restore PIT baseline cache (non-master)
+      - name: Restore PIT baseline cache
+        # On n'a pas besoin de "if: github.ref != 'refs/heads/master'" car le script compare_pit.sh gère l'absence de baseline.
+        # MAIS, pour la clarté et l'optimisation, votre condition est bonne.
         if: github.ref != 'refs/heads/master'
         uses: actions/cache@v4
         with:
           path: core/prev-pit-reports
-          key: pit-baseline-master-${{ github.run_id }}-restore-sentinel
+          # Nous n'avons pas besoin d'une clé exacte ici, nous cherchons la dernière disponible.
+          # Nous retirons donc la clé pour nous concentrer sur la restauration de l'enregistrement de master.
+          key: pit-baseline-master-sentinel-restore # Une clé de fallback sans run_id, moins critique
           restore-keys: |
             pit-baseline-master-
 
