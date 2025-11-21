@@ -17,11 +17,15 @@
  */
 package com.graphhopper.util;
 
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.carrotsearch.hppc.IntArrayList;
 import com.graphhopper.coll.GHBitSet;
@@ -118,5 +122,79 @@ public class BreadthFirstSearchTest {
         assertTrue(counter > 0);
         assertEquals("[1, 5, 2, 6, 3, 4]", list.toString());
     }
+    
 
+    /**
+     * Nouveau test : vérifie l'ordre de visite BFS en simulant complètement
+     * le graphe avec des mocks Mockito (EdgeExplorer + EdgeIterator).
+     *
+     * Graphe simulé :
+     *  0 -> 1, 2
+     *  1 -> 3
+     *  2 -> 3
+     *  3 -> ∅
+     *
+     * Ordre BFS attendu : [0, 1, 2, 3]
+     */
+    @Test
+    public void testBFSWithMockedExplorer() {
+        // sous-classe pour enregistrer l'ordre des visites
+        BreadthFirstSearch bfs = new BreadthFirstSearch() {
+            @Override
+            protected GHBitSet createBitSet() {
+                return new GHTBitSet();
+            }
+
+            @Override
+            public boolean goFurther(int v) {
+                counter++;
+                assertFalse(set.contains(v), "v " + v + " is already contained in set. iteration:" + counter);
+                set.add(v);
+                list.add(v);
+                return true; // continuer toujours l'exploration
+            }
+        };
+
+        // mocks des classes de navigation du graphe
+        EdgeExplorer explorer = mock(EdgeExplorer.class);
+        EdgeIterator iter0 = mock(EdgeIterator.class);
+        EdgeIterator iter1 = mock(EdgeIterator.class);
+        EdgeIterator iter2 = mock(EdgeIterator.class);
+        EdgeIterator iter3 = mock(EdgeIterator.class);
+
+        // 0 -> 1, 2
+        when(iter0.next()).thenReturn(true, true, false);
+        when(iter0.getAdjNode()).thenReturn(1, 2);
+
+        // 1 -> 3
+        when(iter1.next()).thenReturn(true, false);
+        when(iter1.getAdjNode()).thenReturn(3);
+
+        // 2 -> 3
+        when(iter2.next()).thenReturn(true, false);
+        when(iter2.getAdjNode()).thenReturn(3);
+
+        // 3 -> ∅
+        when(iter3.next()).thenReturn(false);
+
+        // EdgeExplorer renvoie l'itérateur correspondant au "base node"
+        when(explorer.setBaseNode(0)).thenReturn(iter0);
+        when(explorer.setBaseNode(1)).thenReturn(iter1);
+        when(explorer.setBaseNode(2)).thenReturn(iter2);
+        when(explorer.setBaseNode(3)).thenReturn(iter3);
+
+        bfs.start(explorer, 0);
+
+        // on a bien visité au moins un noeud
+        assertTrue(counter > 0);
+
+        // ordre BFS attendu
+        assertEquals("[0, 1, 2, 3]", list.toString());
+
+        // on peut aussi vérifier quelques interactions Mockito si tu veux
+        verify(explorer).setBaseNode(0);
+        verify(explorer).setBaseNode(1);
+        verify(explorer).setBaseNode(2);
+        verify(explorer).setBaseNode(3);
+    }
 }

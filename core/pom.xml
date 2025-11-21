@@ -195,6 +195,7 @@
                         <param>com.graphhopper.util.AngleCalc</param>
                         <param>com.graphhopper.util.ArrayUtil</param>
                         <param>com.graphhopper.util.BitUtil</param>
+                        <param>com.graphhopper.routing.weighting.AvoidEdgesWeighting</param>
                     </targetClasses>
                     <targetTests>
                         <param>com.graphhopper.util.BreadthFirstSearchTest</param>
@@ -202,6 +203,7 @@
                         <param>com.graphhopper.util.AngleCalcTest</param>
                         <param>com.graphhopper.util.ArrayUtilTest</param>
                         <param>com.graphhopper.util.BitUtilTest</param>
+                        <param>com.graphhopper.routing.weighting.AvoidEdgesWeightingTest</param>
                     </targetTests>
                     <mutators>
                         <mutator>STRONGER</mutator>
